@@ -16,8 +16,7 @@ class HoopDetector:
         # self.cap = cv2.VideoCapture(0)
 
         # Testing w/ Videos
-        # self.cap = cv2.VideoCapture("vision/video_test_5.mp4")
-        self.cap = cv2.VideoCapture("vision/vecteezy_business-man-in-suit-and-tie-plays-basketball_3208542.mp4")
+        self.cap = cv2.VideoCapture("vision/video_test_5.mp4")
         
         self.hoop_pos = [] # List to store hoop positions
         self.frame_count = 0 # Frame count for the video
