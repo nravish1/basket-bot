@@ -50,10 +50,33 @@ class HoopDetector:
 
                     center = (int(x1 + w / 2), int(y1 + h / 2))
 
+                    #New Code Here - uses YOLO bounded boxes to track hoop width in pixels
+                    # If detected object is a Basketball Hoop, save width
+                    if conf > 0.5 and current_class == "Basketball Hoop":
+                        self.hoop_pos.append((center, self.frame_count, w, h, conf))
+                        cvzone.cornerRect(self.frame, (x1, y1, w, h))
+
+                        # Print width of the hoop in pixels
+                        print(f"Frame {self.frame_count}: Hoop Width = {w} pixels")
+
+                        # Display the hoop width on the video frame
+                        cv2.putText(self.frame, f"Width: {w}px", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+                    
+
+
                     # Create hoop points if high confidence
                     if conf > .5 and current_class == "Basketball Hoop":
                         self.hoop_pos.append((center, self.frame_count, w, h, conf))
                         cvzone.cornerRect(self.frame, (x1, y1, w, h))
+                        # Draw crosshairs at the center of the hoop bounding box
+                        cx, cy = center
+                        cv2.line(self.frame, (cx - 20, cy), (cx + 20, cy), (0, 255, 0), 2)
+                        cv2.line(self.frame, (cx, cy - 20), (cx, cy + 20), (0, 255, 0), 2)
+                        cv2.circle(self.frame, (cx, cy), 3, (0, 255, 0), -1)
+
+                        # Optionally display center coordinates
+                        cv2.putText(self.frame, f"({cx}, {cy})", (cx + 10, cy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
 
             self.frame_count += 1
             cv2.imshow('Frame', self.frame) # Display the current frame
