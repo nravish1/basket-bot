@@ -60,7 +60,7 @@ def rk4_step(func, t, u, dt):
     t_next = t + dt
     return u_next, t_next
 
-def solve_projectile_rk4(func, v0, theta_deg, t_max=2.0, dt=0.01):
+def solve_projectile_rk4(func, v0, theta_deg, t_max=4.0, dt=0.01):
     """
     Solve the projectile motion ODEs (func) from t=0 to t=t_max using RK4.
     
@@ -104,8 +104,8 @@ def solve_projectile_rk4(func, v0, theta_deg, t_max=2.0, dt=0.01):
 
 def main():
     # Initial speed and angle
-    v0 = 11.0        # m/s
-    angle_deg = 60.0 # degrees
+    v0 = 10.34        # m/s
+    angle_deg = 56.0 # degrees
     t_max = 2.0      # seconds
     dt = 0.01        # time step
 
@@ -142,3 +142,75 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def simulate_until_hoop(v0, theta_deg, x_hoop, y_hoop, r_hoop, dt=0.01, t_max=6.0):
+    """
+    Integrates the projectile (with drag) until we detect that
+    the ball's center has passed through the hoop circle
+    while moving downward.
+    
+    Returns:
+        (x_cross, y_cross) = the coordinates where we cross inside the hoop
+    If we never cross inside (with vy < 0), we return the last position.
+    """
+    theta = math.radians(theta_deg)
+    vx0 = v0 * math.cos(theta)
+    vy0 = v0 * math.sin(theta)
+    
+    # State: u = [x, y, vx, vy]
+    u = [0.0, 0.0, vx0, vy0]
+    t = 0.0
+
+    # Helper to get distance from hoop center:
+    def distance_from_hoop(x, y):
+        return math.sqrt((x - x_hoop)**2 + (y - y_hoop)**2)
+
+    # Compute initial distance
+    old_dist = distance_from_hoop(u[0], u[1])
+    # Also store old velocity in y to check sign of vy
+    old_vy = u[3]
+
+    # We integrate in small steps up to t_max
+    for _ in range(int(t_max / dt)):
+        prev_u = u[:]   # copy
+        u, t = rk4_step(projectile_equations_drag, t, u, dt)
+
+        new_dist = distance_from_hoop(u[0], u[1])
+        new_vy = u[3]
+
+        # Check if we just crossed inside the hoop circle
+        if old_dist > r_hoop and new_dist < r_hoop:
+            # If crossing from outside to inside,
+            # we can linearly interpolate for the crossing time in this step.
+
+            # For a more advanced approach, we might do a 2D circle-line intersection,
+            # but a distance-based linear fraction is often "close enough" if dt is small.
+
+            x0, y0, vx0_, vy0_ = prev_u
+            x1, y1, vx1_, vy1_ = u
+
+            # fraction of the dt step where crossing occurs
+            # approximate ratio using distances
+            ratio = (r_hoop - old_dist) / (new_dist - old_dist)
+            # clamp ratio to [0,1]
+            ratio = max(0.0, min(1.0, ratio))
+
+            xc = x0 + ratio*(x1 - x0)
+            yc = y0 + ratio*(y1 - y0)
+            
+            # velocity at crossing? we can approximate by linear interpolation as well
+            vy_cross = old_vy + ratio*(new_vy - old_vy)
+
+            # Check if ball is descending
+            if vy_cross < 0:
+                # We found a valid crossing going downward
+                print(f'Simulated to {xc} {yc}')
+                return xc, yc
+
+        # Update old dist / velocity
+        old_dist = new_dist
+        old_vy = new_vy
+
+    # If we never cross inside, return last position
+    #print(f'Simulated to {u[0]} {u[1]}')
+    return u[0], u[1]
