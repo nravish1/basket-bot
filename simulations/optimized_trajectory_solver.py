@@ -122,6 +122,20 @@ def _objective(z):
     v = z[0]
     return v  # we want to minimize v
 
+def ineq_approach_angle(z):
+    """
+    Force the ball to come in at or below a specified downward angle (steepness).
+    angle_degrees = atan2(vy, vx) in degrees.
+    We want angle_degrees <= -25 => angle_degrees + 25 <= 0.
+    => define ineq = -(angle_degrees + 25), so ineq >= 0 => angle_degrees <= -25.
+    """
+    v, theta_deg, t = z
+    x, y, vx, vy = projectile_state_at_time(projectile_equations_drag, v, theta_deg, t)
+    angle_radians = math.atan2(vy, vx)
+    angle_degrees = math.degrees(angle_radians)
+    min_downward_angle = 50.0  # For example, want -25° approach or steeper.
+    return -(angle_degrees + min_downward_angle)
+
 def _constraints(func, x_hoop, y_hoop):
     """
     SLSQP constraints for the system:
@@ -171,6 +185,7 @@ def _constraints(func, x_hoop, y_hoop):
         {'type': 'ineq', 'fun': ineq_t_positive},
         {'type': 'ineq', 'fun': ineq_theta_lower},
         {'type': 'ineq', 'fun': ineq_theta_upper},
+        {'type': 'ineq', 'fun': ineq_approach_angle},
     ]
 
 def _debug_callback(z):
