@@ -20,7 +20,7 @@ class HoopDetector:
         
         self.hoop_pos = [] # List to store hoop positions
         self.frame_count = 0 # Frame count for the video
-        self.frame = None # Current frame from the video
+        self.frame = None # Frame is null initially
 
         self.run() # Start the detection loop
 
@@ -31,7 +31,9 @@ class HoopDetector:
                 # End of the video or an error occurred
                 break
 
+            frame_center = self.draw_center_frame() # Draw a circle at the center of the frame
             results = self.model(self.frame, stream=True, device=self.device) # Perform inference on the current frame
+            hoop_center = None # Initialize hoop center
 
             for r in results:
                 boxes = r.boxes
@@ -48,12 +50,16 @@ class HoopDetector:
                     cls = int(box.cls[0])
                     current_class = self.class_names[cls]
 
-                    center = (int(x1 + w / 2), int(y1 + h / 2))
+                    center_box = (int(x1 + w / 2), int(y1 + h / 2)) # Center of the bounding box
 
                     # Create hoop points if high confidence
                     if conf > .5 and current_class == "Basketball Hoop":
-                        self.hoop_pos.append((center, self.frame_count, w, h, conf))
+                        hoop_center = (int(x1 + w / 2), int(y1 + h / 2)) # Calculate the center of the hoop
+                        self.hoop_pos.append((center_box, self.frame_count, w, h, conf))
                         cvzone.cornerRect(self.frame, (x1, y1, w, h))
+
+            if hoop_center:
+                self.distance_hoop_center(frame_center, hoop_center) # Calculate the distance from the frame center to the hoop center
 
             self.frame_count += 1
             cv2.imshow('Frame', self.frame) # Display the current frame
@@ -65,6 +71,22 @@ class HoopDetector:
         self.cap.release() # Release the video capture object (stops the camera)
         cv2.destroyAllWindows() # Close all OpenCV windows
 
+    def draw_center_frame(self):
+        """Draw a circle at the center of the frame"""
+        center = (int(self.frame.shape[1] / 2), int(self.frame.shape[0] / 2))
+        cv2.circle(self.frame, center, 5, (0, 255, 0), -1)
+        return center
+
+    def distance_hoop_center(self, frame_center, hoop_center):
+        """Calculate the distance between the center of the frame and the hoop center"""
+        distance = math.sqrt((frame_center[0] - hoop_center[0]) ** 2 + (frame_center[1] - hoop_center[1]) ** 2)
+        cv2.line(self.frame, frame_center, hoop_center, (0, 0, 255), 2)
+        cv2.putText(self.frame, f"Dist: {distance}px", (frame_center[0] + 10, frame_center[1] - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+        print(f"Distance to hoop center: {distance}px")
+
 if __name__ == "__main__":
     HoopDetector()
 
+    
