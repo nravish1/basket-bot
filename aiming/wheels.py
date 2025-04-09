@@ -13,7 +13,7 @@ import Math
     #rightRear = speed - turn + strafe
 
 #Method 2 - better than method 1
-#theta should be 360
+#theta is the direction of movement
 #power is linear speed in direction of theta
 #turn is rotational speed - clockwise or counterclockwise
 def mecanum_2(theta, power, turn):
@@ -42,3 +42,8 @@ def mecanum_2(theta, power, turn):
 def hoop_detection():
     #Return true when LiDAR sees the hoop
     return False
+
+while not hoop_detection():
+    mecanum_2(0, 0, 1)
+
+mecanum_2(0, 0, 0)
