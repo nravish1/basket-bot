@@ -1,6 +1,3 @@
-import time
-from hoop_detection import HoopDetector
-
 class PIDController:
     def __init__(self, Kp, Ki, Kd):
         self.Kp = Kp
