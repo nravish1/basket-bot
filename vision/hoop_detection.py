@@ -61,7 +61,7 @@ class HoopDetector:
             self.distance_hoop_center(self.frame_center, self.hoop_center) # Calculate the distance from the frame center to the hoop center
 
         self.frame_count += 1
-        
+
         if self.pid_error is not None:
             cv2.putText(self.frame, f"PID Error: {self.pid_error:.2f}", (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
@@ -71,9 +71,6 @@ class HoopDetector:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
             
         cv2.imshow('Frame', self.frame) # Display the current frame
-
-        
-
 
         # Close if 'q' is clicked
         if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
