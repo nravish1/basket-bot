@@ -1,25 +1,23 @@
-# PC: receiver.py
+#runs on PC
 import socket
 
-HOST = '0.0.0.0'  # Listen on all interfaces
-PORT = 5001       # Must match port used by Pi
+HOST = '192.168.191.105'  # Raspberry Pi IP address
+PORT = 8888
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
-server_socket.listen(1)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((HOST, PORT))
+print("Connected to Raspberry Pi")
 
-print(f"Waiting for connection on port {PORT}...")
-conn, addr = server_socket.accept()
-print(f"Connected by {addr}")
+# Make a file-like object to read one line at a time
+sock_file = s.makefile('r')
 
-try:
-    while True:
-        data = conn.recv(1024).decode()
-        if not data:
-            break
-        print(f"Received distance: {data.strip()} cm")  # Or inches if you're using that
+while True:
+    line = sock_file.readline()
+    if not line:
+        break  # connection closed
 
-finally:
-    conn.close()
-    server_socket.close()
-    
+    try:
+        distance = int(line.strip())  # Removes '\n' and converts to int
+        print(f"Distance from LiDAR: {distance} cm")
+    except ValueError:
+        print("Invalid data:", repr(line))
