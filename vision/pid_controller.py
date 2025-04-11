@@ -14,6 +14,3 @@ class PIDController:
         self.prev_error = error
 
         return output
-
-
-    
