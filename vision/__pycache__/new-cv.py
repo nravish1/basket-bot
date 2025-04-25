@@ -16,7 +16,7 @@ def main():
 
     head_angle = 90.0
     head_angle_ave = 90.0
-    head_angle_alpha = 0.25
+    head_angle_alpha = 0.25  # Smoothing factor for the servo angle
 
     # Set up GPIO for servo
     SERVO_PIN = 18  # GPIO 18 (Pin 12)
@@ -60,9 +60,11 @@ def main():
                 cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
 
                 # Calculate the head angle based on the detected human's position
-                head_angle = remap(float(xA + (xB - xA) / 2.0), IN_MIN, IN_MAX, OUT_MIN, OUT_MAX)
-                print('x: ' + str(xA) + ', head: ' + str(head_angle))
+                center_x = float(xA + (xB - xA) / 2.0)
+                head_angle = remap(center_x, 0, frame.shape[1], OUT_MIN, OUT_MAX)
+                print('Center X: ' + str(center_x) + ', Head Angle: ' + str(head_angle))
 
+                # Apply smoothing to the head angle
                 head_angle_ave = head_angle * head_angle_alpha + head_angle_ave * (1.0 - head_angle_alpha)
                 set_servo_angle(head_angle_ave)
 
